@@ -1,0 +1,21 @@
+spring:
+  profiles: test
+  rabbitmq:
+    host: ${rabbitmqaddr}
+    port: 5672
+    username: ${rabbitmqusername}
+    password: ${rabbitmqpassword}
+    virtualHost: /
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${nacosaddr}:8848
+      config:
+        server-addr: ${nacosaddr}:8848
+
+# ----- Redis
+redisson-config: redisson-test.yaml
+
+# ----- nacos
+namingClientBeatThreadCount: 2
+namingPollingThreadCount: 2

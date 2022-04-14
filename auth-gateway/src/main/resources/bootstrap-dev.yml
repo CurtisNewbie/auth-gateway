@@ -1,0 +1,23 @@
+spring:
+  profiles: dev
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtualHost: /
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+      config:
+        server-addr: localhost:8848
+server:
+  port: 8082
+
+# ----- Redis
+redisson-config: redisson-dev.yaml
+
+# ----- nacos
+namingClientBeatThreadCount: 1
+namingPollingThreadCount: 1

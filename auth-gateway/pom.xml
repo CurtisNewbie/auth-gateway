@@ -16,6 +16,8 @@
   <description>Gateway for backend services</description>
   <properties>
     <java.version>8</java.version>
+    <common-module.version>2.0.9-SNAPSHOT</common-module.version>
+    <messaging-module.version>2.0.4-SNAPSHOT</messaging-module.version>
   </properties>
   <dependencies>
 
@@ -43,10 +45,17 @@
     <dependency>
       <groupId>com.curtisnewbie</groupId>
       <artifactId>common-module</artifactId>
+      <version>${common-module.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.curtisnewbie</groupId>
+      <artifactId>messaging-module</artifactId>
+      <version>${messaging-module.version}</version>
       <exclusions>
         <exclusion>
-          <groupId>com.baomidou</groupId>
-          <artifactId>mybatis-plus-boot-starter</artifactId>
+          <groupId>com.curtisnewbie</groupId>
+          <artifactId>common-module</artifactId>
         </exclusion>
       </exclusions>
     </dependency>

@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: auth-gateway
+  profiles:
+    active: dev
+  cloud:
+    # route based on services registered
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      # cors
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+

@@ -2,13 +2,17 @@ package com.curtisnewbie.gateway.filter;
 
 import com.curtisnewbie.common.util.JsonUtils;
 import com.curtisnewbie.common.vo.Result;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -24,9 +28,10 @@ import java.util.Optional;
  * @author yongjie.zhuang
  */
 @Slf4j
-public class AuthFilter implements GlobalFilter {
+@Component
+public class AuthFilter implements GlobalFilter, Ordered {
 
-    private static final String JWT_TOKEN = "token";
+    private static final String AUTHORIZATION_HEADER = "authorization";
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -54,8 +59,13 @@ public class AuthFilter implements GlobalFilter {
         return exg.getRequest().getURI().getPath().startsWith("/login");
     }
 
+    // todo return a mono
     /** Validate the token */
     private boolean isTokenValid(final String token) {
+//        buildAuthClient()
+//                .post()
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .body(Mono.just(null), Object.class) // todo
 
         // todo impl this
         return false;
@@ -63,11 +73,11 @@ public class AuthFilter implements GlobalFilter {
 
     /** Extract the first token from headers */
     private Optional<String> getFirstToken(final HttpHeaders headers) {
-        if (headers.containsKey(JWT_TOKEN))
+        if (headers.containsKey(AUTHORIZATION_HEADER))
             return Optional.empty();
 
-        List<String> tokens = headers.get(JWT_TOKEN);
-        if (tokens.isEmpty())
+        List<String> tokens = headers.get(AUTHORIZATION_HEADER);
+        if (tokens == null || tokens.isEmpty())
             return Optional.empty();
 
         // always get the first token
@@ -83,5 +93,17 @@ public class AuthFilter implements GlobalFilter {
         } catch (IOException e) {
             throw new IllegalStateException("Failed to deserialize response messgae", e);
         }
+    }
+
+    @Override
+    public int getOrder() {
+        return HIGHEST_PRECEDENCE; // first
+    }
+
+    private WebClient buildAuthClient() {
+        // todo endpoint used to validate and exchange token
+        return WebClient.builder()
+                .baseUrl("http://auth-service/")
+                .build();
     }
 }
