@@ -56,6 +56,7 @@ public class AuthFilter implements GlobalFilter, Ordered {
 
     /** Check whether this request is a login request */
     private boolean isLoginRequest(final ServerWebExchange exg) {
+        // todo read database probably?
         return exg.getRequest().getURI().getPath().startsWith("/login");
     }
 
