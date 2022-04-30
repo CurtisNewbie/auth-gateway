@@ -23,7 +23,7 @@ public final class HttpHeadersUtils {
         Assert.notNull(headers, "headers == null");
         Assert.notNull(headers, "key == null");
 
-        if (headers.containsKey(key))
+        if (!headers.containsKey(key))
             return Collections.emptyList();
 
         List<String> tokens = headers.get(key);

@@ -16,6 +16,12 @@ spring:
           '[/**]':
             allowedOrigins: "*"
             allowedMethods: "*"
+  sleuth:
+    baggage:
+      remote-fields:
+        - id
+        - username
+        - role
 
 server:
   port: 7070
