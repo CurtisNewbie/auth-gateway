@@ -22,8 +22,8 @@
   <dependencies>
 
     <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-sleuth</artifactId>
     </dependency>
 
     <dependency>
@@ -53,17 +53,17 @@
       <version>${common-module.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>com.curtisnewbie</groupId>
-      <artifactId>messaging-module</artifactId>
-      <version>${messaging-module.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.curtisnewbie</groupId>
-          <artifactId>common-module</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>com.curtisnewbie</groupId>-->
+<!--      <artifactId>messaging-module</artifactId>-->
+<!--      <version>${messaging-module.version}</version>-->
+<!--      <exclusions>-->
+<!--        <exclusion>-->
+<!--          <groupId>com.curtisnewbie</groupId>-->
+<!--          <artifactId>common-module</artifactId>-->
+<!--        </exclusion>-->
+<!--      </exclusions>-->
+<!--    </dependency>-->
   </dependencies>
 
   <build>
