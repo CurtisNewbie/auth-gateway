@@ -11,7 +11,9 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -41,11 +43,13 @@ public class AuthFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
-        final String requestPath = exchange.getRequest().getURI().getPath();
+        ServerHttpRequest request = exchange.getRequest();
+        final String requestPath = request.getURI().getPath();
+        final HttpMethod method = request.getMethod();
         final ServerHttpResponse resp = exchange.getResponse();
 
         // whitelist, doesn't require authorization
-        if (isInWhitelist(requestPath))
+        if (isInWhitelist(requestPath, method))
             return chain.filter(exchange);
 
         // permit only open api requests
@@ -92,9 +96,19 @@ public class AuthFilter implements GlobalFilter, Ordered {
         TraceUtils.putTUser(tu);
     }
 
+    // todo store these urls in database
     /** Check whether this request is in whitelist */
-    private boolean isInWhitelist(final String path) {
-        return equalsAnyIgnoreCase(path, "/auth-service/open/api/user/login", "/auth-service/open/api/user/register/request");
+    private boolean isInWhitelist(String path, HttpMethod method) {
+        if (method == HttpMethod.GET) {
+            int i = path.indexOf("?");
+            if (i != -1)
+                path = path.substring(0, i);
+        }
+
+        return equalsAnyIgnoreCase(path,
+                "/auth-service/open/api/user/login",
+                "/auth-service/open/api/user/register/request",
+                "/file-service/open/api/file/token/download");
     }
 
     /**
