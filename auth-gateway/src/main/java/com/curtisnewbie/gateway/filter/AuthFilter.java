@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.curtisnewbie.common.util.ValueUtils.equalsAnyIgnoreCase;
 import static com.curtisnewbie.gateway.constants.HeaderConst.AUTHORIZATION;
 import static com.curtisnewbie.gateway.utils.ServerHttpResponseUtils.write;
 import static org.springframework.util.StringUtils.hasText;
@@ -43,8 +44,8 @@ public class AuthFilter implements GlobalFilter, Ordered {
         final String requestPath = exchange.getRequest().getURI().getPath();
         final ServerHttpResponse resp = exchange.getResponse();
 
-        // permit login request
-        if (isLoginRequest(requestPath))
+        // whitelist, doesn't require authorization
+        if (isInWhitelist(requestPath))
             return chain.filter(exchange);
 
         // permit only open api requests
@@ -91,10 +92,9 @@ public class AuthFilter implements GlobalFilter, Ordered {
         TraceUtils.putTUser(tu);
     }
 
-    /** Check whether this request is a login request */
-    private boolean isLoginRequest(final String path) {
-        // todo change url after we refactor auth-service
-        return path.equalsIgnoreCase("/auth-service/api/token/login-for-token");
+    /** Check whether this request is in whitelist */
+    private boolean isInWhitelist(final String path) {
+        return equalsAnyIgnoreCase(path, "/auth-service/open/api/user/login", "/auth-service/open/api/user/register/request");
     }
 
     /**
@@ -113,7 +113,7 @@ public class AuthFilter implements GlobalFilter, Ordered {
     private Mono<Result<Map<String, String>>> validateToken(final String token) {
         return webClientBuilder.build()
                 .get()
-                .uri("http://auth-service/api/token/user?token=" + token)
+                .uri("http://auth-service/open/api/token/user?token=" + token)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Result<Map<String, String>>>() {
                 });
