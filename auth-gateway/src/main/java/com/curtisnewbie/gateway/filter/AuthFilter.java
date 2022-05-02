@@ -1,10 +1,17 @@
 package com.curtisnewbie.gateway.filter;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.curtisnewbie.common.data.BiContainer;
 import com.curtisnewbie.common.trace.TUser;
 import com.curtisnewbie.common.trace.TraceUtils;
+import com.curtisnewbie.common.util.AssertUtils;
 import com.curtisnewbie.common.util.UrlUtils;
 import com.curtisnewbie.common.vo.Result;
+import com.curtisnewbie.gateway.config.Whitelist;
+import com.curtisnewbie.gateway.constants.Attributes;
 import com.curtisnewbie.gateway.utils.HttpHeadersUtils;
+import com.curtisnewbie.module.jwt.domain.api.JwtDecoder;
+import com.curtisnewbie.module.jwt.vo.DecodeResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -23,9 +30,9 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.curtisnewbie.common.util.ValueUtils.equalsAnyIgnoreCase;
 import static com.curtisnewbie.gateway.constants.HeaderConst.AUTHORIZATION;
 import static com.curtisnewbie.gateway.utils.ServerHttpResponseUtils.write;
+import static com.curtisnewbie.service.auth.remote.consts.AuthServiceError.TOKEN_EXPIRED;
 import static org.springframework.util.StringUtils.hasText;
 
 /**
@@ -39,6 +46,10 @@ public class AuthFilter implements GlobalFilter, Ordered {
 
     @Autowired
     private WebClient.Builder webClientBuilder;
+    @Autowired
+    private Whitelist whitelist;
+    @Autowired
+    private JwtDecoder jwtDecoder;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -49,7 +60,7 @@ public class AuthFilter implements GlobalFilter, Ordered {
         final ServerHttpResponse resp = exchange.getResponse();
 
         // whitelist, doesn't require authorization
-        if (isInWhitelist(requestPath, method))
+        if (whitelist.isInWhitelist(requestPath, method))
             return chain.filter(exchange);
 
         // permit only open api requests
@@ -66,18 +77,22 @@ public class AuthFilter implements GlobalFilter, Ordered {
             return writeError("Please login first", resp);
         }
 
-        return validateToken(token)
-                .flatMap(result -> {
-                    if (result.hasError()) {
-                        resp.setStatusCode(HttpStatus.BAD_REQUEST);
-                        return write(result, resp);
-                    }
+        // try to validate the token
+        final DecodeResult decodeResult = jwtDecoder.decode(token);
+        if (!decodeResult.isValid()) {
+            final String msg = decodeResult.isExpired() ? "Token is expired" : "Please login first";
+            resp.setStatusCode(HttpStatus.UNAUTHORIZED);
+            return writeError(msg, resp);
+        }
 
-                    // authorized, setup the tracing info
-                    setupTraceInfo(result.getData());
+        // set context attribute
+        final TUser tUser = toTUser(decodeResult.getDecodedJWT());
+        exchange.getAttributes().put(Attributes.CONTEXT.getKey(), tUser);
 
-                    return chain.filter(exchange);
-                });
+        // setup the tracing info
+        TraceUtils.putTUser(tUser);
+
+        return chain.filter(exchange);
     }
 
     @Override
@@ -87,28 +102,12 @@ public class AuthFilter implements GlobalFilter, Ordered {
 
     // ------------------------------------------- private helper methods -----------------------------
 
-    private static void setupTraceInfo(Map<String, String> data) {
-        final TUser tu = TUser.builder()
-                .userId(Integer.parseInt(data.get("id")))
-                .username(data.get("username"))
-                .role(data.get("role"))
+    private static TUser toTUser(DecodedJWT jwt) {
+        return TUser.builder()
+                .userId(Integer.parseInt(jwt.getClaim("id").asString()))
+                .username(jwt.getClaim("username").asString())
+                .role(jwt.getClaim("role").asString())
                 .build();
-        TraceUtils.putTUser(tu);
-    }
-
-    // todo store these urls in database
-    /** Check whether this request is in whitelist */
-    private boolean isInWhitelist(String path, HttpMethod method) {
-        if (method == HttpMethod.GET) {
-            int i = path.indexOf("?");
-            if (i != -1)
-                path = path.substring(0, i);
-        }
-
-        return equalsAnyIgnoreCase(path,
-                "/auth-service/open/api/user/login",
-                "/auth-service/open/api/user/register/request",
-                "/file-service/open/api/file/token/download");
     }
 
     /**
@@ -123,8 +122,10 @@ public class AuthFilter implements GlobalFilter, Ordered {
         return segAfterService != null && segAfterService.equals("open");
     }
 
-    /** Validate the token */
-    private Mono<Result<Map<String, String>>> validateToken(final String token) {
+    /** Retrieve token info from auth-service */
+    @Deprecated
+    private Mono<Result<Map<String, String>>> retrieveTokenInfo(final String token) {
+        // todo we don't need to validate the token like this, it's a JWT :D
         return webClientBuilder.build()
                 .get()
                 .uri("http://auth-service/open/api/token/user?token=" + token)

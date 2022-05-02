@@ -19,3 +19,7 @@ redisson-config: redisson-test.yaml
 # ----- nacos
 namingClientBeatThreadCount: 2
 namingPollingThreadCount: 2
+
+jwt-module:
+  publicKey: ${jwt-module.publicKey}
+  privateKey: ${jwt-module.privateKey}

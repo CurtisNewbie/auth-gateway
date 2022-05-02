@@ -25,3 +25,6 @@ spring:
 
 server:
   port: 7070
+
+jwt-module:
+  issuer: yongj.zhuang-auth-service
