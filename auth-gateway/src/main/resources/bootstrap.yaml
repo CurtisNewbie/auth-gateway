@@ -10,6 +10,9 @@ spring:
         locator:
           enabled: true
           lowerCaseServiceId: true
+      httpclient:
+        connect-timeout: 1000
+        response-timeout: 1h # 1h is for file-service
       # cors
       globalcors:
         cors-configurations:

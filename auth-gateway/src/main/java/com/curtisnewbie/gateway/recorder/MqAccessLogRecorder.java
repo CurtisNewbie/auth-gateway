@@ -31,6 +31,6 @@ public class MqAccessLogRecorder implements AccessLogRecorder {
         acsLog.setUserId(cmd.getUserId());
         acsLog.setUsername(cmd.getUsername());
 
-        Runner.runSafely(() -> dispatcher.dispatchAccessLog(acsLog), e -> log.warn("Unable to save access-log", e));
+        Runner.runSafely(() -> dispatcher.dispatchAccessLog(acsLog), e -> log.warn("Unable to dispatch access-log", e));
     }
 }
