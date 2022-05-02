@@ -1,10 +1,12 @@
 package com.curtisnewbie.gateway.filter;
 
 import com.curtisnewbie.common.trace.TUser;
+import com.curtisnewbie.common.util.Runner;
+import com.curtisnewbie.gateway.config.Whitelist;
 import com.curtisnewbie.gateway.constants.Attributes;
-import com.curtisnewbie.gateway.recorder.AccessLogRecorder;
-import com.curtisnewbie.gateway.recorder.RecordAccessCmd;
-import com.curtisnewbie.gateway.utils.HttpHeadersUtils;
+import com.curtisnewbie.service.auth.messaging.services.AuthMessageDispatcher;
+import com.curtisnewbie.service.auth.remote.vo.AccessLogInfoVo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -26,13 +28,14 @@ import static com.curtisnewbie.gateway.utils.HttpHeadersUtils.getAll;
  *
  * @author yongj.zhuang
  */
+@Slf4j
 @Component
 public class RecordFilter implements GlobalFilter, Ordered {
 
     private static final String X_FORWARDED_FOR = "X-Forwarded-For";
 
     @Autowired
-    private AccessLogRecorder accessLogRecorder;
+    private AuthMessageDispatcher dispatcher;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -51,6 +54,7 @@ public class RecordFilter implements GlobalFilter, Ordered {
     }
 
     private void recordAccessLog(ServerHttpRequest request, @Nullable TUser tUser) {
+        final String path = Whitelist.preprocessing(request.getURI().getPath(), request.getMethod());
         InetSocketAddress remoteAddress = request.getRemoteAddress();
         if (remoteAddress == null)
             return; // disconnected already
@@ -76,11 +80,12 @@ public class RecordFilter implements GlobalFilter, Ordered {
             remoteAddr = address == null ? "unknown" : address.getHostAddress();
         }
 
-        accessLogRecorder.recordAccess(RecordAccessCmd.builder()
-                .remoteAddr(remoteAddr)
-                .userId(userId)
-                .username(username)
-                .build());
+        final AccessLogInfoVo p = new AccessLogInfoVo();
+        p.setIpAddress(remoteAddr);
+        p.setUserId(userId);
+        p.setUsername(username);
+        p.setUrl(path);
+        Runner.runSafely(() -> dispatcher.dispatchAccessLog(p), e -> log.warn("Unable to dispatch access-log", e));
     }
 
 }
