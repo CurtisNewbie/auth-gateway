@@ -97,7 +97,7 @@ public class AuthFilter implements GlobalFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return FilterOrder.SECOND.getOrder();
+        return FilterOrder.FIRST.getOrder();
     }
 
     // ------------------------------------------- private helper methods -----------------------------
