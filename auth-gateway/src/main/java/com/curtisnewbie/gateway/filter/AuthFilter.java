@@ -88,6 +88,7 @@ public class AuthFilter implements GlobalFilter, Ordered {
         // set context attribute
         final TUser tUser = toTUser(decodeResult.getDecodedJWT());
         exchange.getAttributes().put(Attributes.CONTEXT.getKey(), tUser);
+        exchange.getAttributes().put(Attributes.TOKEN.getKey(), token);
 
         // setup the tracing info
         TraceUtils.putTUser(tUser);

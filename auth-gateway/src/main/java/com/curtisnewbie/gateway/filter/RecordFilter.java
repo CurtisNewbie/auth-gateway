@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import javax.validation.constraints.NotNull;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -43,7 +44,8 @@ public class RecordFilter implements GlobalFilter, Ordered {
         final ServerHttpRequest request = exchange.getRequest();
 
         final TUser tUser = exchange.getAttribute(Attributes.CONTEXT.getKey()); // nullable
-        recordAccessLog(request, tUser);
+        final String token = exchange.getAttribute(Attributes.TOKEN.getKey());
+        recordAccessLog(request, tUser, token);
 
         return chain.filter(exchange);
     }
@@ -53,7 +55,7 @@ public class RecordFilter implements GlobalFilter, Ordered {
         return FilterOrder.SECOND.getOrder();
     }
 
-    private void recordAccessLog(ServerHttpRequest request, @Nullable TUser tUser) {
+    private void recordAccessLog(ServerHttpRequest request, @Nullable TUser tUser, @Nullable String token) {
         final String path = Whitelist.preprocessing(request.getURI().getPath(), request.getMethod());
         InetSocketAddress remoteAddress = request.getRemoteAddress();
         if (remoteAddress == null)
@@ -85,6 +87,7 @@ public class RecordFilter implements GlobalFilter, Ordered {
         p.setUserId(userId);
         p.setUsername(username);
         p.setUrl(path);
+        p.setToken(token);
         Runner.runSafely(() -> dispatcher.dispatchAccessLog(p), e -> log.warn("Unable to dispatch access-log", e));
     }
 

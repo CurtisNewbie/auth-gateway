@@ -10,7 +10,11 @@ import lombok.Getter;
 @Getter
 public enum Attributes {
 
-    CONTEXT("context");
+    /** TUser */
+    CONTEXT("context"),
+
+    /** JWT Token */
+    TOKEN("token");
 
     private final String key;
 
