@@ -11,7 +11,7 @@ import lombok.Getter;
 public enum Attributes {
 
     /** TUser */
-    CONTEXT("context"),
+    TUSER("tuser"),
 
     /** JWT Token */
     TOKEN("token");

@@ -1,15 +1,14 @@
 package com.curtisnewbie.gateway.filter;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.curtisnewbie.common.data.BiContainer;
 import com.curtisnewbie.common.trace.TUser;
 import com.curtisnewbie.common.trace.TraceUtils;
-import com.curtisnewbie.common.util.AssertUtils;
 import com.curtisnewbie.common.util.UrlUtils;
 import com.curtisnewbie.common.vo.Result;
 import com.curtisnewbie.gateway.config.Whitelist;
 import com.curtisnewbie.gateway.constants.Attributes;
 import com.curtisnewbie.gateway.utils.HttpHeadersUtils;
+import com.curtisnewbie.gateway.utils.RequestUrlUtils;
 import com.curtisnewbie.module.jwt.domain.api.JwtDecoder;
 import com.curtisnewbie.module.jwt.vo.DecodeResult;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,6 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -27,12 +25,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static com.curtisnewbie.gateway.constants.HeaderConst.AUTHORIZATION;
-import static com.curtisnewbie.gateway.utils.ServerHttpResponseUtils.write;
-import static com.curtisnewbie.service.auth.remote.consts.AuthServiceError.TOKEN_EXPIRED;
+import static com.curtisnewbie.gateway.utils.ServerHttpResponseUtils.writeError;
 import static org.springframework.util.StringUtils.hasText;
 
 /**
@@ -55,17 +54,16 @@ public class AuthFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
         ServerHttpRequest request = exchange.getRequest();
-        final String requestPath = request.getURI().getPath();
-        final HttpMethod method = request.getMethod();
+        final String requestPath = RequestUrlUtils.tripOffParam(request.getURI().getPath(), request.getMethod());
         final ServerHttpResponse resp = exchange.getResponse();
 
         // whitelist, doesn't require authorization
-        if (whitelist.isInWhitelist(requestPath, method))
+        if (whitelist.isInWhitelist(requestPath))
             return chain.filter(exchange);
 
         // permit only open api requests
         if (!isOpenApi(requestPath)) {
-            resp.setStatusCode(HttpStatus.UNAUTHORIZED);
+            resp.setStatusCode(HttpStatus.FORBIDDEN);
             return writeError("Not permitted", resp);
         }
 
@@ -85,11 +83,18 @@ public class AuthFilter implements GlobalFilter, Ordered {
             return writeError(msg, resp);
         }
 
-        // set context attribute
+        // decode TUser object
         final TUser tUser = toTUser(decodeResult.getDecodedJWT());
-        exchange.getAttributes().put(Attributes.CONTEXT.getKey(), tUser);
-        exchange.getAttributes().put(Attributes.TOKEN.getKey(), token);
+        // validate if the user has permission to use the service
+        final String serviceName = serviceName(requestPath);
+        if (!isUserPermittedToUseService(tUser, serviceName)) {
+            resp.setStatusCode(HttpStatus.FORBIDDEN);
+            return writeError(String.format("Not permitted to use '%s', please contact administrator if you want the permission", serviceName), resp);
+        }
 
+        // set context attribute
+        exchange.getAttributes().put(Attributes.TUSER.getKey(), tUser);
+        exchange.getAttributes().put(Attributes.TOKEN.getKey(), token);
         // setup the tracing info
         TraceUtils.putTUser(tUser);
 
@@ -104,10 +109,14 @@ public class AuthFilter implements GlobalFilter, Ordered {
     // ------------------------------------------- private helper methods -----------------------------
 
     private static TUser toTUser(DecodedJWT jwt) {
+        String ss = jwt.getClaim("services").asString();
+        if (ss == null) ss = "";
+
         return TUser.builder()
                 .userId(Integer.parseInt(jwt.getClaim("id").asString()))
                 .username(jwt.getClaim("username").asString())
                 .role(jwt.getClaim("role").asString())
+                .services(Arrays.asList(ss.split(",")))
                 .build();
     }
 
@@ -135,9 +144,27 @@ public class AuthFilter implements GlobalFilter, Ordered {
                 });
     }
 
-    /** Write error message to response */
-    private Mono<Void> writeError(final String errMsg, final ServerHttpResponse resp) {
-        return write(Result.error(errMsg), resp);
+    /** Extract service name from request path */
+    private static String serviceName(final String requestPath) {
+        if (requestPath == null)
+            return null;
+        return UrlUtils.segment(0, requestPath);
     }
 
+    /** Check if the user is permitted to use the service */
+    private static boolean isUserPermittedToUseService(TUser user, String serviceName) {
+        if (user.getRole().equals("admin"))
+            return true;
+
+        final List<String> services = user.getServices();
+
+        if (serviceName == null)
+            return true; // it will be a 404 anyway
+
+        if (services == null)
+            return false;
+
+        // this list will be pretty small
+        return services.contains(serviceName);
+    }
 }

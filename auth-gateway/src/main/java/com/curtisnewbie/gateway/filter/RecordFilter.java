@@ -4,6 +4,7 @@ import com.curtisnewbie.common.trace.TUser;
 import com.curtisnewbie.common.util.Runner;
 import com.curtisnewbie.gateway.config.Whitelist;
 import com.curtisnewbie.gateway.constants.Attributes;
+import com.curtisnewbie.gateway.utils.RequestUrlUtils;
 import com.curtisnewbie.service.auth.messaging.services.AuthMessageDispatcher;
 import com.curtisnewbie.service.auth.remote.vo.AccessLogInfoVo;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +18,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import javax.validation.constraints.NotNull;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -43,7 +43,7 @@ public class RecordFilter implements GlobalFilter, Ordered {
 
         final ServerHttpRequest request = exchange.getRequest();
 
-        final TUser tUser = exchange.getAttribute(Attributes.CONTEXT.getKey()); // nullable
+        final TUser tUser = exchange.getAttribute(Attributes.TUSER.getKey());
         final String token = exchange.getAttribute(Attributes.TOKEN.getKey());
         recordAccessLog(request, tUser, token);
 
@@ -56,8 +56,8 @@ public class RecordFilter implements GlobalFilter, Ordered {
     }
 
     private void recordAccessLog(ServerHttpRequest request, @Nullable TUser tUser, @Nullable String token) {
-        final String path = Whitelist.preprocessing(request.getURI().getPath(), request.getMethod());
-        InetSocketAddress remoteAddress = request.getRemoteAddress();
+        final String path = RequestUrlUtils.tripOffParam(request.getURI().getPath(), request.getMethod());
+        final InetSocketAddress remoteAddress = request.getRemoteAddress();
         if (remoteAddress == null)
             return; // disconnected already
 

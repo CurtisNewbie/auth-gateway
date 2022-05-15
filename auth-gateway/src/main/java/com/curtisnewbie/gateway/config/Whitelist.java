@@ -1,7 +1,6 @@
 package com.curtisnewbie.gateway.config;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 
 import static com.curtisnewbie.common.util.ValueUtils.equalsAnyIgnoreCase;
 
@@ -19,9 +18,7 @@ public class Whitelist {
 
 
     /** Check whether this request is in whitelist */
-    public boolean isInWhitelist(String path, HttpMethod method) {
-        path = preprocessing(path, method);
-
+    public boolean isInWhitelist(String path) {
         // todo store these urls in database
         return equalsAnyIgnoreCase(path,
                 LOGIN_PATH,
@@ -29,19 +26,4 @@ public class Whitelist {
                 FILE_DOWNLOAD_PATH);
     }
 
-    /** Check if it's a login request */
-    public boolean isLoginRequest(String path, HttpMethod method) {
-        path = preprocessing(path, method);
-        return equalsAnyIgnoreCase(path, LOGIN_PATH);
-    }
-
-    /** Preprocess the path, e.g., remove all query parameters if it's a get request */
-    public static String preprocessing(String path, HttpMethod method) {
-        if (method == HttpMethod.GET) {
-            int i = path.indexOf("?");
-            if (i != -1)
-                path = path.substring(0, i);
-        }
-        return path;
-    }
 }

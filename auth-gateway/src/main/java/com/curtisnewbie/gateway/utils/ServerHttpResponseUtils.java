@@ -31,4 +31,9 @@ public final class ServerHttpResponseUtils {
             throw new IllegalStateException("Failed to write response message", e);
         }
     }
+
+    /** Write error message to response */
+    public static Mono<Void> writeError(final String errMsg, final ServerHttpResponse resp) {
+        return write(Result.error(errMsg), resp);
+    }
 }
