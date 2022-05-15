@@ -2,7 +2,6 @@ package com.curtisnewbie.gateway.filter;
 
 import com.curtisnewbie.common.trace.TUser;
 import com.curtisnewbie.common.util.Runner;
-import com.curtisnewbie.gateway.config.Whitelist;
 import com.curtisnewbie.gateway.constants.Attributes;
 import com.curtisnewbie.gateway.utils.RequestUrlUtils;
 import com.curtisnewbie.service.auth.messaging.services.AuthMessageDispatcher;
@@ -43,9 +42,10 @@ public class RecordFilter implements GlobalFilter, Ordered {
 
         final ServerHttpRequest request = exchange.getRequest();
 
+        final String requestPath = exchange.getAttribute(Attributes.PATH.getKey());
         final TUser tUser = exchange.getAttribute(Attributes.TUSER.getKey());
         final String token = exchange.getAttribute(Attributes.TOKEN.getKey());
-        recordAccessLog(request, tUser, token);
+        recordAccessLog(request, requestPath, tUser, token);
 
         return chain.filter(exchange);
     }
@@ -55,8 +55,9 @@ public class RecordFilter implements GlobalFilter, Ordered {
         return FilterOrder.SECOND.getOrder();
     }
 
-    private void recordAccessLog(ServerHttpRequest request, @Nullable TUser tUser, @Nullable String token) {
-        final String path = RequestUrlUtils.tripOffParam(request.getURI().getPath(), request.getMethod());
+    private void recordAccessLog(final ServerHttpRequest request, final String path, @Nullable final TUser tUser,
+                                 @Nullable final String token) {
+
         final InetSocketAddress remoteAddress = request.getRemoteAddress();
         if (remoteAddress == null)
             return; // disconnected already

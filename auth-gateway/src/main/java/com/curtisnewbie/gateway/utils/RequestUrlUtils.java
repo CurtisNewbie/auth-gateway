@@ -12,7 +12,7 @@ public final class RequestUrlUtils {
     }
 
     /** Remove all query parameters if it's a get request */
-    public static String tripOffParam(String path, HttpMethod method) {
+    public static String stripOffParam(String path, HttpMethod method) {
         if (path == null || method == null) return null;
 
         if (method == HttpMethod.GET) {

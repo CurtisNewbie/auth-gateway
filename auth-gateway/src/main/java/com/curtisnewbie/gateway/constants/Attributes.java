@@ -10,6 +10,9 @@ import lombok.Getter;
 @Getter
 public enum Attributes {
 
+    /** Request PATH */
+    PATH("path"),
+
     /** TUser */
     TUSER("tuser"),
 

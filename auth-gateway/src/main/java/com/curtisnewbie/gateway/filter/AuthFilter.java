@@ -54,7 +54,8 @@ public class AuthFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 
         ServerHttpRequest request = exchange.getRequest();
-        final String requestPath = RequestUrlUtils.tripOffParam(request.getURI().getPath(), request.getMethod());
+        final String requestPath = RequestUrlUtils.stripOffParam(request.getURI().getPath(), request.getMethod());
+        exchange.getAttributes().put(Attributes.PATH.getKey(), requestPath);
         final ServerHttpResponse resp = exchange.getResponse();
 
         // whitelist, doesn't require authorization
