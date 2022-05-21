@@ -25,6 +25,7 @@ spring:
         - id
         - username
         - role
+        - services
 
 server:
   port: 7070
