@@ -88,7 +88,7 @@ public class AuthFilter implements GlobalFilter, Ordered {
         final TUser tUser = toTUser(decodeResult.getDecodedJWT());
         // validate if the user has permission to use the service
         final String serviceName = serviceName(requestPath);
-        if (!isUserPermittedToUseService(tUser, serviceName)) {
+        if (whitelist.requiresPermission(requestPath) && !isUserPermittedToUseService(tUser, serviceName)) {
             resp.setStatusCode(HttpStatus.FORBIDDEN);
             return writeError(String.format("Not permitted to use '%s', please contact administrator if you want the permission", serviceName), resp);
         }

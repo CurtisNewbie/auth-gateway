@@ -12,6 +12,8 @@ import static com.curtisnewbie.common.util.ValueUtils.equalsAnyIgnoreCase;
 @Configuration
 public class Whitelist {
 
+    private static final String INFO_PATH = "/auth-service/open/api/user/info";
+
     private static final String LOGIN_PATH = "/auth-service/open/api/user/login";
     private static final String REG_PATH = "/auth-service/open/api/user/register/request";
     private static final String FILE_DOWNLOAD_PATH = "/file-service/open/api/file/token/download";
@@ -24,6 +26,11 @@ public class Whitelist {
                 LOGIN_PATH,
                 REG_PATH,
                 FILE_DOWNLOAD_PATH);
+    }
+
+    /** Check whether the path requires permission */
+    public boolean requiresPermission(String path) {
+        return !equalsAnyIgnoreCase(path, INFO_PATH);
     }
 
 }
