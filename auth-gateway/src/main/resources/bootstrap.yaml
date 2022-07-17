@@ -19,6 +19,11 @@ spring:
           '[/**]':
             allowedOrigins: "*"
             allowedMethods: "*"
+      routes:
+        - id: fantahsea_route
+          uri: http://localhost:8081
+          predicates:
+            - Path=/fantahsea/**
   sleuth:
     baggage:
       remote-fields:
