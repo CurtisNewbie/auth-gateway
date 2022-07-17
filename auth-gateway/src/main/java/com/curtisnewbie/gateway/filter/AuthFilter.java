@@ -117,6 +117,7 @@ public class AuthFilter implements GlobalFilter, Ordered {
                 .userId(Integer.parseInt(jwt.getClaim("id").asString()))
                 .username(jwt.getClaim("username").asString())
                 .role(jwt.getClaim("role").asString())
+                .userNo(jwt.getClaim("userno").asString())
                 .services(Arrays.asList(ss.split(",")))
                 .build();
     }
