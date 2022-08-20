@@ -23,3 +23,5 @@ namingPollingThreadCount: 2
 jwt-module:
   publicKey: ${jwt-module.publicKey}
   privateKey: ${jwt-module.privateKey}
+
+fantahsea-path: "http://localhost:8081"

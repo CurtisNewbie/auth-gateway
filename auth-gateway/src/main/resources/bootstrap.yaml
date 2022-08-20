@@ -21,9 +21,11 @@ spring:
             allowedMethods: "*"
       routes:
         - id: fantahsea_route
-          uri: http://localhost:8081
+          uri: ${fantahsea-path}
           predicates:
             - Path=/fantahsea/**
+          filters:
+            - RewritePath=/fantahsea/(?<segment>.*),/$\{segment}
   sleuth:
     baggage:
       remote-fields:
