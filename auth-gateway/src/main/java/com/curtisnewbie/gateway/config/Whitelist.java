@@ -17,6 +17,7 @@ public class Whitelist {
     private static final String LOGIN_PATH = "/auth-service/open/api/user/login";
     private static final String REG_PATH = "/auth-service/open/api/user/register/request";
     private static final String FILE_DOWNLOAD_PATH = "/file-service/open/api/file/token/download";
+    private static final String FANTAHSEA_DOWNLOAD_PATH = "/fantahsea/open/api/gallery/image/download";
 
 
     /** Check whether this request is in whitelist */
@@ -25,7 +26,9 @@ public class Whitelist {
         return equalsAnyIgnoreCase(path,
                 LOGIN_PATH,
                 REG_PATH,
-                FILE_DOWNLOAD_PATH);
+                FILE_DOWNLOAD_PATH,
+                FANTAHSEA_DOWNLOAD_PATH
+        );
     }
 
     /** Check whether the path requires permission */
