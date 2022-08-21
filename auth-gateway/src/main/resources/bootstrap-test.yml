@@ -24,4 +24,4 @@ jwt-module:
   publicKey: ${jwt-module.publicKey}
   privateKey: ${jwt-module.privateKey}
 
-fantahsea-path: "http://localhost:8081"
+fantahsea-path: "http://fantahsea:8081"
