@@ -29,3 +29,4 @@ jwt-module:
   privateKey: ${jwt-module.privateKey}
 
 fantahsea-path: "http://fantahsea:8081"
+dtaskgo-path: "http://dtaskgo:8083"

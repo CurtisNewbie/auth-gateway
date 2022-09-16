@@ -26,6 +26,12 @@ spring:
             - Path=/fantahsea/**
           filters:
             - RewritePath=/fantahsea/(?<segment>.*),/$\{segment}
+        - id: dtaskgo_route
+          uri: ${dtaskgo-path}
+          predicates:
+            - Path=/dtaskgo/**
+          filters:
+            - RewritePath=/dtaskgo/(?<segment>.*),/$\{segment}
   sleuth:
     baggage:
       remote-fields:
