@@ -2,6 +2,7 @@ package com.curtisnewbie.gateway.filter;
 
 import com.curtisnewbie.common.trace.TUser;
 import com.curtisnewbie.common.util.Runner;
+import com.curtisnewbie.gateway.config.AccessLogConfig;
 import com.curtisnewbie.gateway.constants.Attributes;
 import com.curtisnewbie.gateway.utils.RequestUrlUtils;
 import com.curtisnewbie.service.auth.messaging.services.AuthMessageDispatcher;
@@ -36,6 +37,8 @@ public class RecordFilter implements GlobalFilter, Ordered {
 
     @Autowired
     private AuthMessageDispatcher dispatcher;
+    @Autowired
+    private AccessLogConfig accessLogConfig;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -43,9 +46,11 @@ public class RecordFilter implements GlobalFilter, Ordered {
         final ServerHttpRequest request = exchange.getRequest();
 
         final String requestPath = exchange.getAttribute(Attributes.PATH.getKey());
-        final TUser tUser = exchange.getAttribute(Attributes.TUSER.getKey());
-        final String token = exchange.getAttribute(Attributes.TOKEN.getKey());
-        recordAccessLog(request, requestPath, tUser, token);
+        if (accessLogConfig.isAccessLogged(requestPath)) {
+            final TUser tUser = exchange.getAttribute(Attributes.TUSER.getKey());
+            final String token = exchange.getAttribute(Attributes.TOKEN.getKey());
+            recordAccessLog(request, requestPath, tUser, token);
+        }
 
         return chain.filter(exchange);
     }
