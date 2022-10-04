@@ -46,6 +46,7 @@ public class RecordFilter implements GlobalFilter, Ordered {
         final ServerHttpRequest request = exchange.getRequest();
 
         final String requestPath = exchange.getAttribute(Attributes.PATH.getKey());
+
         if (accessLogConfig.isAccessLogged(requestPath)) {
             final TUser tUser = exchange.getAttribute(Attributes.TUSER.getKey());
             final String token = exchange.getAttribute(Attributes.TOKEN.getKey());
@@ -62,6 +63,9 @@ public class RecordFilter implements GlobalFilter, Ordered {
 
     private void recordAccessLog(final ServerHttpRequest request, final String path, @Nullable final TUser tUser,
                                  @Nullable final String token) {
+
+        // TODO, maybe we should log user-agent in access log?
+        // final List<String> userAgents = request.getHeaders().get("user-agent");
 
         final InetSocketAddress remoteAddress = request.getRemoteAddress();
         if (remoteAddress == null)
