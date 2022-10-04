@@ -43,8 +43,8 @@ import static org.springframework.util.StringUtils.hasText;
 @Component
 public class AuthFilter implements GlobalFilter, Ordered {
 
-    @Autowired
-    private WebClient.Builder webClientBuilder;
+//    @Autowired
+//    private WebClient.Builder webClientBuilder;
     @Autowired
     private Whitelist whitelist;
     @Autowired
@@ -134,17 +134,17 @@ public class AuthFilter implements GlobalFilter, Ordered {
         return segAfterService != null && segAfterService.equals("open");
     }
 
-    /** Retrieve token info from auth-service */
-    @Deprecated
-    private Mono<Result<Map<String, String>>> retrieveTokenInfo(final String token) {
-        // todo we don't need to validate the token like this, it's a JWT :D
-        return webClientBuilder.build()
-                .get()
-                .uri("http://auth-service/open/api/token/user?token=" + token)
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<Result<Map<String, String>>>() {
-                });
-    }
+//    /** Retrieve token info from auth-service */
+//    @Deprecated
+//    private Mono<Result<Map<String, String>>> retrieveTokenInfo(final String token) {
+//        // todo we don't need to validate the token like this, it's a JWT :D
+//        return webClientBuilder.build()
+//                .get()
+//                .uri("http://auth-service/open/api/token/user?token=" + token)
+//                .retrieve()
+//                .bodyToMono(new ParameterizedTypeReference<Result<Map<String, String>>>() {
+//                });
+//    }
 
     /** Extract service name from request path */
     private static String serviceName(final String requestPath) {

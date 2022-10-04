@@ -1,7 +1,6 @@
 #FROM openjdk:8-jdk-alpine
 FROM openjdk:17-alpine
 
-
 LABEL author="yongjie.zhuang"
 LABEL descrption="Auth Gateway"
 
