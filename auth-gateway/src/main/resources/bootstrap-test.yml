@@ -1,29 +1,24 @@
 spring:
   profiles: test
+  cloud:
+    consul:
+      host: ${consulhost}
+      port: ${consulport}
+
+# ----- Redis
+redisson-config: redisson-test.yaml
+
+# ----- messaging-module
+messaging:
   rabbitmq:
     host: ${rabbitmqaddr}
     port: 5672
     username: ${rabbitmqusername}
     password: ${rabbitmqpassword}
-    virtualHost: /
-  cloud:
-    nacos:
-      discovery:
-        server-addr: ${nacosaddr}:8848
-        username: ${nacosusername}
-        password: ${nacospassword}
-      config:
-        server-addr: ${nacosaddr}:8848
-        username: ${nacosusername}
-        password: ${nacospassword}
+    virtualHost: "/"
+    publisherConfirmType: SIMPLE
 
-# ----- Redis
-redisson-config: redisson-test.yaml
-
-# ----- nacos
-namingClientBeatThreadCount: 2
-namingPollingThreadCount: 2
-
+# ----- jwt-module
 jwt-module:
   publicKey: ${jwt-module.publicKey}
   privateKey: ${jwt-module.privateKey}
