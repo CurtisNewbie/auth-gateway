@@ -11,14 +11,14 @@
 
   <groupId>com.curtisnewbie</groupId>
   <artifactId>auth-gateway</artifactId>
-  <version>1.0.7</version>
+  <version>1.0.8</version>
   <name>auth-gateway</name>
   <description>Gateway for backend services</description>
   <properties>
     <java.version>8</java.version>
     <common-module.version>2.1.5</common-module.version>
     <messaging-module.version>2.0.7</messaging-module.version>
-    <auth-service-remote.version>1.1.3</auth-service-remote.version>
+    <auth-service-remote.version>1.1.4.2</auth-service-remote.version>
     <jwt-module.version>1.0.1</jwt-module.version>
   </properties>
   <dependencies>
