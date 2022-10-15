@@ -1,4 +1,4 @@
-# auth-gateway v1.0.8
+# auth-gateway v1.0.9
 
 Simple gateway for my personal use.
 

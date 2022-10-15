@@ -23,6 +23,8 @@ public final class DefinedPaths {
     /*
     file-related
      */
+    /** media streaming from file-service */
+    public static final String MEDIA_STREAMING_PATH = "/file-service/open/api/file/token/media/streaming";
     /** download file from file-service */
     public static final String FILE_DOWNLOAD_PATH = "/file-service/open/api/file/token/download";
     /** download file from fantahsea */

@@ -20,7 +20,8 @@ public class Whitelist {
                 LOGIN_PATH,
                 REG_PATH,
                 FILE_DOWNLOAD_PATH,
-                FANTAHSEA_DOWNLOAD_PATH
+                FANTAHSEA_DOWNLOAD_PATH,
+                MEDIA_STREAMING_PATH
         );
     }
 
