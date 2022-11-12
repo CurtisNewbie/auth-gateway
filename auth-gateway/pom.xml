@@ -11,28 +11,22 @@
 
   <groupId>com.curtisnewbie</groupId>
   <artifactId>auth-gateway</artifactId>
-  <version>1.0.10</version>
+  <version>1.1.0</version>
   <name>auth-gateway</name>
   <description>Gateway for backend services</description>
+
   <properties>
     <java.version>8</java.version>
-    <common-module.version>2.1.5</common-module.version>
+    <common-module.version>2.1.10</common-module.version>
     <messaging-module.version>2.0.7</messaging-module.version>
-    <auth-service-remote.version>1.1.4.2</auth-service-remote.version>
     <jwt-module.version>1.0.1</jwt-module.version>
   </properties>
-  <dependencies>
 
+  <dependencies>
     <dependency>
       <groupId>com.curtisnewbie</groupId>
       <artifactId>jwt-module</artifactId>
       <version>${jwt-module.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.curtisnewbie</groupId>
-      <artifactId>auth-service-messaging</artifactId>
-      <version>${auth-service-remote.version}</version>
     </dependency>
 
     <dependency>
@@ -65,18 +59,6 @@
       <groupId>com.curtisnewbie</groupId>
       <artifactId>common-module</artifactId>
       <version>${common-module.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.curtisnewbie</groupId>
-      <artifactId>messaging-module</artifactId>
-      <version>${messaging-module.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.curtisnewbie</groupId>
-          <artifactId>common-module</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
   </dependencies>
 

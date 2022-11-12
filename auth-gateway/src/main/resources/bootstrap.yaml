@@ -47,3 +47,11 @@ server:
 
 jwt-module:
   issuer: yongj.zhuang-auth-service
+
+whitelist:
+  request-url:
+    - "/auth-service/open/api/user/login"
+    - "/auth-service/open/api/user/register/request"
+    - "/file-service/open/api/file/token/media/streaming"
+    - "/file-service/open/api/file/token/download"
+    - "/fantahsea/open/api/gallery/image/download"

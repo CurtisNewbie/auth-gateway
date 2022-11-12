@@ -1,4 +1,4 @@
-# auth-gateway v1.0.10
+# auth-gateway v1.1.0 
 
 Simple gateway for my personal use.
 
@@ -17,9 +17,7 @@ To compile this app, you will also need to manually install the following module
 This project depends on the following modules that you must manually install (using `mvn clean install`).
 
 - [curtisnewbie-bom](https://github.com/CurtisNewbie/curtisnewbie-bom)
-- [messaging-module v2.0.7](https://github.com/CurtisNewbie/messaging-module/tree/v2.0.7)
-- [auth-service-remote v1.1.4.2](https://github.com/curtisnewbie/auth-service/tree/v1.1.4.2)
-- [common-module v2.1.5](https://github.com/CurtisNewbie/common-module/tree/v2.1.5)
+- [common-module v2.1.10](https://github.com/CurtisNewbie/common-module/tree/v2.1.10)
 - [jwt-module v1.0.1](https://github.com/CurtisNewbie/jwt-module/tree/v1.0.1)
 
 ## Update

@@ -4,7 +4,6 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.curtisnewbie.common.trace.TUser;
 import com.curtisnewbie.common.trace.TraceUtils;
 import com.curtisnewbie.common.util.UrlUtils;
-import com.curtisnewbie.common.vo.Result;
 import com.curtisnewbie.gateway.config.Whitelist;
 import com.curtisnewbie.gateway.constants.Attributes;
 import com.curtisnewbie.gateway.utils.HttpHeadersUtils;
@@ -16,18 +15,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static com.curtisnewbie.gateway.constants.HeaderConst.AUTHORIZATION;
@@ -134,18 +130,6 @@ public class AuthFilter implements GlobalFilter, Ordered {
         return segAfterService != null && segAfterService.equals("open");
     }
 
-//    /** Retrieve token info from auth-service */
-//    @Deprecated
-//    private Mono<Result<Map<String, String>>> retrieveTokenInfo(final String token) {
-//        // todo we don't need to validate the token like this, it's a JWT :D
-//        return webClientBuilder.build()
-//                .get()
-//                .uri("http://auth-service/open/api/token/user?token=" + token)
-//                .retrieve()
-//                .bodyToMono(new ParameterizedTypeReference<Result<Map<String, String>>>() {
-//                });
-//    }
-
     /** Extract service name from request path */
     private static String serviceName(final String requestPath) {
         if (requestPath == null)
@@ -155,16 +139,11 @@ public class AuthFilter implements GlobalFilter, Ordered {
 
     /** Check if the user is permitted to use the service */
     private static boolean isUserPermittedToUseService(TUser user, String serviceName) {
-        if (user.getRole().equals("admin"))
-            return true;
+        if (user.getRole().equals("admin")) return true;
 
         final List<String> services = user.getServices();
-
-        if (serviceName == null)
-            return true; // it will be a 404 anyway
-
-        if (services == null)
-            return false;
+        if (serviceName == null) return true; // it will be a 404 anyway
+        if (services == null) return false;
 
         // this list will be pretty small
         return services.contains(serviceName);
