@@ -54,4 +54,7 @@ whitelist:
     - "/auth-service/open/api/user/register/request"
     - "/file-service/open/api/file/token/media/streaming"
     - "/file-service/open/api/file/token/download"
+    - "/file-service/open/api/sync/file/info"
+    - "/file-service/open/api/sync/file/download"
+    - "/file-service/open/api/sync/event/poll"
     - "/fantahsea/open/api/gallery/image/download"
