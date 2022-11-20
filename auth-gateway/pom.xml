@@ -18,7 +18,6 @@
   <properties>
     <java.version>8</java.version>
     <common-module.version>2.1.10</common-module.version>
-    <messaging-module.version>2.0.7</messaging-module.version>
     <jwt-module.version>1.0.1</jwt-module.version>
   </properties>
 
