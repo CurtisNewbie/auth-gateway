@@ -1,4 +1,4 @@
-# auth-gateway v1.1.0 
+# auth-gateway v1.1.1
 
 Simple gateway for my personal use.
 
@@ -17,8 +17,9 @@ To compile this app, you will also need to manually install the following module
 This project depends on the following modules that you must manually install (using `mvn clean install`).
 
 - [curtisnewbie-bom](https://github.com/CurtisNewbie/curtisnewbie-bom)
-- [common-module v2.1.10](https://github.com/CurtisNewbie/common-module/tree/v2.1.10)
+- [common-module v2.2.0](https://github.com/CurtisNewbie/common-module/tree/v2.2.0)
 - [jwt-module v1.0.1](https://github.com/CurtisNewbie/jwt-module/tree/v1.0.1)
+- [goauth-client-java v1.0.0](https://github.com/CurtisNewbie/goauth/tree/v1.0.0/client/goauth-client-java)
 
 ## Update
 

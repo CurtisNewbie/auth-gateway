@@ -4,10 +4,14 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.curtisnewbie.common.trace.TUser;
 import com.curtisnewbie.common.trace.TraceUtils;
 import com.curtisnewbie.common.util.UrlUtils;
+import com.curtisnewbie.common.vo.Result;
 import com.curtisnewbie.gateway.config.Whitelist;
 import com.curtisnewbie.gateway.constants.Attributes;
 import com.curtisnewbie.gateway.utils.HttpHeadersUtils;
 import com.curtisnewbie.gateway.utils.RequestUrlUtils;
+import com.curtisnewbie.goauth.client.GoAuthClient;
+import com.curtisnewbie.goauth.client.TestResAccessReq;
+import com.curtisnewbie.goauth.client.TestResAccessResp;
 import com.curtisnewbie.module.jwt.domain.api.JwtDecoder;
 import com.curtisnewbie.module.jwt.vo.DecodeResult;
 import lombok.extern.slf4j.Slf4j;
@@ -39,12 +43,12 @@ import static org.springframework.util.StringUtils.hasText;
 @Component
 public class AuthFilter implements GlobalFilter, Ordered {
 
-//    @Autowired
-//    private WebClient.Builder webClientBuilder;
     @Autowired
     private Whitelist whitelist;
     @Autowired
     private JwtDecoder jwtDecoder;
+    @Autowired
+    private GoAuthClient goAuthClient;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -58,42 +62,44 @@ public class AuthFilter implements GlobalFilter, Ordered {
         if (whitelist.isInWhitelist(requestPath))
             return chain.filter(exchange);
 
-        // permit only open api requests
-        if (!isOpenApi(requestPath)) {
-            resp.setStatusCode(HttpStatus.FORBIDDEN);
+        // extract token from HttpHeaders
+        final Optional<String> tokenOpt = HttpHeadersUtils.getFirst(exchange.getRequest().getHeaders(), AUTHORIZATION);
+        String token = null;
+        TUser user = null;
+
+        // requests may or may not be authenticated, some requests are 'PUBLIC', we just try to extract the user info from it
+        if (tokenOpt.isPresent() && hasText(token = tokenOpt.get())) {
+            final DecodeResult decodeResult = jwtDecoder.decode(token); // try to validate the token
+            if (decodeResult.isValid()) {
+                user = toTUser(decodeResult.getDecodedJWT()); // decode TUser object
+            }
+        }
+
+        // test resource access
+        TestResAccessReq tra = new TestResAccessReq();
+        tra.setRoleNo(user != null ? user.getRoleNo() : "");
+        tra.setUrl(requestPath);
+        final Result<TestResAccessResp> res = goAuthClient.testResAccess(tra);
+        if (!res.isOk()) {
+            resp.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Failed to test resource access, requestPath: {}, code: {}, msg: {}, user: {}", requestPath, res.getErrorCode(),
+                    res.getMsg(), user);
+            return writeError("Unknown Server Error", resp);
+        }
+
+        if (!res.getData().isValid()) {
+            resp.setStatusCode(HttpStatus.UNAUTHORIZED);
             return writeError("Not permitted", resp);
         }
 
-        // extract token from HttpHeaders
-        final Optional<String> tokenOpt = HttpHeadersUtils.getFirst(exchange.getRequest().getHeaders(), AUTHORIZATION);
-        final String token;
-        if (!tokenOpt.isPresent() || !hasText(token = tokenOpt.get())) {
-            resp.setStatusCode(HttpStatus.UNAUTHORIZED);
-            return writeError("Please login first", resp);
-        }
+        if (user != null) {
+            // set context attribute
+            exchange.getAttributes().put(Attributes.TUSER.getKey(), user);
+            exchange.getAttributes().put(Attributes.TOKEN.getKey(), token);
 
-        // try to validate the token
-        final DecodeResult decodeResult = jwtDecoder.decode(token);
-        if (!decodeResult.isValid()) {
-            final String msg = decodeResult.isExpired() ? "Token is expired" : "Please login first";
-            resp.setStatusCode(HttpStatus.UNAUTHORIZED);
-            return writeError(msg, resp);
+            // setup the tracing info
+            TraceUtils.putTUser(user);
         }
-
-        // decode TUser object
-        final TUser tUser = toTUser(decodeResult.getDecodedJWT());
-        // validate if the user has permission to use the service
-        final String serviceName = serviceName(requestPath);
-        if (whitelist.requiresPermission(requestPath) && !isUserPermittedToUseService(tUser, serviceName)) {
-            resp.setStatusCode(HttpStatus.FORBIDDEN);
-            return writeError(String.format("Not permitted to use '%s', please contact administrator if you want the permission", serviceName), resp);
-        }
-
-        // set context attribute
-        exchange.getAttributes().put(Attributes.TUSER.getKey(), tUser);
-        exchange.getAttributes().put(Attributes.TOKEN.getKey(), token);
-        // setup the tracing info
-        TraceUtils.putTUser(tUser);
 
         return chain.filter(exchange);
     }
@@ -114,6 +120,7 @@ public class AuthFilter implements GlobalFilter, Ordered {
                 .username(jwt.getClaim("username").asString())
                 .role(jwt.getClaim("role").asString())
                 .userNo(jwt.getClaim("userno").asString())
+                .roleNo(jwt.getClaim("roleno").asString())
                 .services(Arrays.asList(ss.split(",")))
                 .build();
     }
@@ -132,8 +139,7 @@ public class AuthFilter implements GlobalFilter, Ordered {
 
     /** Extract service name from request path */
     private static String serviceName(final String requestPath) {
-        if (requestPath == null)
-            return null;
+        if (requestPath == null) return null;
         return UrlUtils.segment(0, requestPath);
     }
 
