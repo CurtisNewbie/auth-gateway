@@ -19,15 +19,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.curtisnewbie.gateway.constants.HeaderConst.AUTHORIZATION;
@@ -48,7 +51,7 @@ public class AuthFilter implements GlobalFilter, Ordered {
     @Autowired
     private JwtDecoder jwtDecoder;
     @Autowired
-    private GoAuthClient goAuthClient;
+    private WebClient.Builder webClientBuilder;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -75,33 +78,39 @@ public class AuthFilter implements GlobalFilter, Ordered {
             }
         }
 
+        final TUser constUser = user;
+        final String constToken = token;
+
         // test resource access
         TestResAccessReq tra = new TestResAccessReq();
         tra.setRoleNo(user != null ? user.getRoleNo() : "");
         tra.setUrl(requestPath);
-        final Result<TestResAccessResp> res = goAuthClient.testResAccess(tra);
-        if (!res.isOk()) {
-            resp.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
-            log.error("Failed to test resource access, requestPath: {}, code: {}, msg: {}, user: {}", requestPath, res.getErrorCode(),
-                    res.getMsg(), user);
-            return writeError("Unknown Server Error", resp);
-        }
 
-        if (!res.getData().isValid()) {
-            resp.setStatusCode(HttpStatus.UNAUTHORIZED);
-            return writeError("Not permitted", resp);
-        }
+        final Mono<Result<TestResAccessResp>> resMono = testResourceAccess(tra);
+        return resMono.flatMap(res -> {
 
-        if (user != null) {
-            // set context attribute
-            exchange.getAttributes().put(Attributes.TUSER.getKey(), user);
-            exchange.getAttributes().put(Attributes.TOKEN.getKey(), token);
+            if (!res.isOk()) {
+                resp.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+                log.error("Failed to test resource access, requestPath: {}, code: {}, msg: {}", requestPath, res.getErrorCode(), res.getMsg());
+                return writeError("Unknown Server Error", resp);
+            }
 
-            // setup the tracing info
-            TraceUtils.putTUser(user);
-        }
+            if (!res.getData().isValid()) {
+                resp.setStatusCode(HttpStatus.UNAUTHORIZED);
+                return writeError("Not permitted", resp);
+            }
 
-        return chain.filter(exchange);
+            if (constUser != null) {
+                // set context attribute
+                exchange.getAttributes().put(Attributes.TUSER.getKey(), constUser);
+                exchange.getAttributes().put(Attributes.TOKEN.getKey(), constToken);
+
+                // setup the tracing info
+                TraceUtils.putTUser(constUser);
+            }
+
+            return chain.filter(exchange);
+        });
     }
 
     @Override
@@ -110,6 +119,17 @@ public class AuthFilter implements GlobalFilter, Ordered {
     }
 
     // ------------------------------------------- private helper methods -----------------------------
+
+    /** Test user's access the resource, it may also be a unauthenticated call where the roleNo is null */
+    private Mono<Result<TestResAccessResp>> testResourceAccess(TestResAccessReq req) {
+        return webClientBuilder.build()
+                .post()
+                .uri("http://goauth/remote/path/resource/access-test")
+                .bodyValue(req)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<Result<TestResAccessResp>>() {
+                });
+    }
 
     private static TUser toTUser(DecodedJWT jwt) {
         String ss = jwt.getClaim("services").asString();

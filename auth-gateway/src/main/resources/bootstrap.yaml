@@ -52,4 +52,7 @@ jwt-module:
 whitelist:
   request-url:
     - "/auth-service/open/api/user/login"
+    - "/auth-service/open/api/user/info"
     - "/auth-service/open/api/user/register/request"
+
+goauth.path.report.disabled: true

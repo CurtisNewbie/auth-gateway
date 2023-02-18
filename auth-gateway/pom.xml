@@ -19,16 +19,9 @@
     <java.version>8</java.version>
     <common-module.version>2.2.0</common-module.version>
     <jwt-module.version>1.0.1</jwt-module.version>
-    <goauth-client.version>1.0.0</goauth-client.version>
   </properties>
 
   <dependencies>
-
-    <dependency>
-      <groupId>com.curtisnewbie</groupId>
-      <artifactId>goauth-client-java</artifactId>
-      <version>${goauth-client.version}</version>
-    </dependency>
 
     <dependency>
       <groupId>com.curtisnewbie</groupId>
