@@ -54,5 +54,6 @@ whitelist:
     - "/auth-service/open/api/user/login"
     - "/auth-service/open/api/user/info"
     - "/auth-service/open/api/user/register/request"
+    - "/auth-service/open/api/token/exchange"
 
 goauth.path.report.disabled: true

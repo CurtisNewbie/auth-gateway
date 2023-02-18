@@ -5,13 +5,12 @@ import com.curtisnewbie.common.trace.TUser;
 import com.curtisnewbie.common.trace.TraceUtils;
 import com.curtisnewbie.common.util.UrlUtils;
 import com.curtisnewbie.common.vo.Result;
+import com.curtisnewbie.gateway.components.TestResAccessReq;
+import com.curtisnewbie.gateway.components.TestResAccessResp;
 import com.curtisnewbie.gateway.config.Whitelist;
 import com.curtisnewbie.gateway.constants.Attributes;
 import com.curtisnewbie.gateway.utils.HttpHeadersUtils;
 import com.curtisnewbie.gateway.utils.RequestUrlUtils;
-import com.curtisnewbie.goauth.client.GoAuthClient;
-import com.curtisnewbie.goauth.client.TestResAccessReq;
-import com.curtisnewbie.goauth.client.TestResAccessResp;
 import com.curtisnewbie.module.jwt.domain.api.JwtDecoder;
 import com.curtisnewbie.module.jwt.vo.DecodeResult;
 import lombok.extern.slf4j.Slf4j;
@@ -61,10 +60,6 @@ public class AuthFilter implements GlobalFilter, Ordered {
         exchange.getAttributes().put(Attributes.PATH.getKey(), requestPath);
         final ServerHttpResponse resp = exchange.getResponse();
 
-        // whitelist, doesn't require authorization
-        if (whitelist.isInWhitelist(requestPath))
-            return chain.filter(exchange);
-
         // extract token from HttpHeaders
         final Optional<String> tokenOpt = HttpHeadersUtils.getFirst(exchange.getRequest().getHeaders(), AUTHORIZATION);
         String token = null;
@@ -75,11 +70,19 @@ public class AuthFilter implements GlobalFilter, Ordered {
             final DecodeResult decodeResult = jwtDecoder.decode(token); // try to validate the token
             if (decodeResult.isValid()) {
                 user = toTUser(decodeResult.getDecodedJWT()); // decode TUser object
+                // set context attribute
+                exchange.getAttributes().put(Attributes.TUSER.getKey(), user);
+                exchange.getAttributes().put(Attributes.TOKEN.getKey(), token);
+
+                // setup the tracing info
+                TraceUtils.putTUser(user);
             }
         }
 
-        final TUser constUser = user;
-        final String constToken = token;
+        // whitelist, doesn't require authorization
+        if (whitelist.isInWhitelist(requestPath)) {
+            return chain.filter(exchange);
+        }
 
         // test resource access
         TestResAccessReq tra = new TestResAccessReq();
@@ -96,17 +99,8 @@ public class AuthFilter implements GlobalFilter, Ordered {
             }
 
             if (!res.getData().isValid()) {
-                resp.setStatusCode(HttpStatus.UNAUTHORIZED);
+                resp.setStatusCode(HttpStatus.FORBIDDEN);
                 return writeError("Not permitted", resp);
-            }
-
-            if (constUser != null) {
-                // set context attribute
-                exchange.getAttributes().put(Attributes.TUSER.getKey(), constUser);
-                exchange.getAttributes().put(Attributes.TOKEN.getKey(), constToken);
-
-                // setup the tracing info
-                TraceUtils.putTUser(constUser);
             }
 
             return chain.filter(exchange);
