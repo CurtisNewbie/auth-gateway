@@ -88,6 +88,7 @@ public class AuthFilter implements GlobalFilter, Ordered {
         TestResAccessReq tra = new TestResAccessReq();
         tra.setRoleNo(user != null ? user.getRoleNo() : "");
         tra.setUrl(requestPath);
+        tra.setMethod(request.getMethodValue());
 
         final Mono<Result<TestResAccessResp>> resMono = testResourceAccess(tra);
         return resMono.flatMap(res -> {

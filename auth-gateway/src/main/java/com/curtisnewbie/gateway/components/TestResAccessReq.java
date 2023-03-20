@@ -9,4 +9,5 @@ import lombok.Data;
 public class TestResAccessReq {
     private String roleNo;
     private String url;
+    private String method;
 }
