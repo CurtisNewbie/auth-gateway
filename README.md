@@ -20,7 +20,6 @@ This project depends on the following modules that you must manually install (us
 - [curtisnewbie-bom](https://github.com/CurtisNewbie/curtisnewbie-bom)
 - [common-module v2.2.0](https://github.com/CurtisNewbie/common-module/tree/v2.2.0)
 - [jwt-module v1.0.1](https://github.com/CurtisNewbie/jwt-module/tree/v1.0.1)
-- [goauth-client-java v1.0.0](https://github.com/CurtisNewbie/goauth/tree/v1.0.0/client/goauth-client-java)
 
 ## Update
 
