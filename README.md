@@ -11,6 +11,7 @@ To compile this app, you will also need to manually install the following module
 - Consul 
 - RabbitMQ
 - Redis
+- goauth [goauth >= v1.0.0](https://github.com/CurtisNewbie/goauth/tree/v1.0.0)
 
 ## Modules and Dependencies
 
