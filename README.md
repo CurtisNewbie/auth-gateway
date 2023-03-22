@@ -23,4 +23,8 @@ This project depends on the following modules that you must manually install (us
 
 ## Update
 
-Starting from v1.0.8, `auth-gateway` has changed from `Nacos` to `Consul`. Both the `file-service` and `auth-service` have changed to `Consul` at version `v1.2.4` and `v1.1.4.2` as well. If the `v1.0.8` version is used for auth-gateway, all the other services must be upgraded to appropriate versions, because `auth-gateway` relies on service discovery to route requests.
+- Starting from v1.1.1, `goauth` is required for path level authorization and resource management.
+
+- Starting from v1.0.8, `auth-gateway` has changed from `Nacos` to `Consul`. Both the `file-service` and `auth-service` have changed to `Consul` at version `v1.2.4` and `v1.1.4.2` as well. If the `v1.0.8` version is used for auth-gateway, all the other services must be upgraded to appropriate versions, because `auth-gateway` relies on service discovery to route requests.
+
+
